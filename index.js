@@ -16,7 +16,9 @@ export const io = new SocketServer(server, {
 });
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+    origin: "*",
+}));
 
 app.use(AppRoutes)
 
