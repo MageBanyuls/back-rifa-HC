@@ -15,9 +15,11 @@ export const io = new SocketServer(server, {
   },
 });
 
+app.use(express.json())
+
 // Middlewares
 app.use(cors({
-    origin: "*",
+    origin: 'http://localhost:5173',
 }));
 
 app.use(AppRoutes)
