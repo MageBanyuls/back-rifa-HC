@@ -11,6 +11,11 @@ const prisma = new PrismaClient();
 
 const router = Router();
 
+
+router.get('/',async(req,res)=>{
+  res.send('hola')
+})
+
 router.post('/create-suscription',async(req,res)=>{
     const { token, nombre, email, celular, rut, password,user_id } = req.body;
   
