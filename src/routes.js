@@ -5,7 +5,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { io } from "../index.js";
 import jwt from 'jsonwebtoken';
 import 'dotenv/config.js'
+import { Preference, MercadoPagoConfig, Payment } from "mercadopago";
 
+
+const client = new MercadoPagoConfig({accessToken: 'APP_USR-1104579101218160-061611-f9da7a6e92ab46ca6efbcb59d3ecd60a-1853466315'})
 
 const prisma = new PrismaClient();
 
@@ -145,47 +148,182 @@ const generar_suscripcion = async(data) => {
     }
 }
 
-async function register_data (user_data, suscription_data, pay_data) {
-    try{
-      const user = await prisma.users.create({
-        data: user_data
-      })
-      const suscription = await prisma.suscriptions.create({
-        data: suscription_data
-      })
-      const pay = await prisma.pays.create({
-        data:pay_data
-      })
-      
-      const response = {
-        ok:true,
-        user,
-        suscription,
-        pay
-      }
-
-
-      return response
-
-    }catch(err){
-
-      const response = {
-        ok:false,
-        message: err
-      }
-      return response
-    
-    }
-}
 
 router.post('/crear-order', async(req,res)=>{
+  const { nombre, email, celular, rut, password,user_id } = req.body;
+  const fecha_de_nacimiento = "1999-06-14T11:21:59.000-04:00";
+  
   try{
-
+    const body = {
+      items : [{
+        title : 'Plan Anual',
+        quantity : 1,
+        unit_price : 99000,
+        currency_id : 'CLP'
+ 
+      }],
+      notification_url: `https://rifa-club-back-production.up.railway.app/webhook/${nombre}/${email}/${celular}/${rut}/${password}/${user_id}/${fecha_de_nacimiento}`
+    };
+    const preference = new Preference(client);
+    const result = await preference.create({body});
+    return res.status(200).json({init_point: result.init_point})
   }catch(err){
-
+    return res.status(400).json({message:err})
   }
 })
 
+router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_nacimiento',async(req,res)=>{
+  console.log('webhook')
+  const { query } = req;
+  const topic = query.topic || query.type;
+  console.log(topic)
+
+  const nombre = req.params.nombre
+  const email = req.params.email;
+  const celular = req.params.celular; 
+  const rut = req.params.rut;
+  const password = req.params.password;
+  const user_id = req.params.user_id
+  const fecha_de_nacimiento = req.params.fecha_de_nacimiento
+
+  
+  if(topic === "payment"){
+    
+    const paymentId = query.id || query["data.id"];
+    try{
+      const payment = await new Payment(client).get({id: paymentId});
+  
+      console.log('pago')
+      console.log(payment)
+      
+      if(payment.status === "approved"){
+
+        console.log('se pudo hacer el pago! :)')
+        const suscription_id = uuidv4();
+        const plan = process.env.PLAN_ID;
+
+        const user_data = { 
+          id: user_id , 
+          nombre, 
+          email, 
+          celular, 
+          rut, 
+          fecha_de_nacimiento, 
+          activo:true, 
+          password
+        }
+  
+        const suscription_data = { 
+          id: suscription_id, 
+          user_id: user_id , 
+          plan_id: plan, 
+          mercadopago_plan_id: null, 
+          plan_type: "annual", 
+          start_date: payment.date_created,
+          end_date: null,
+          billing_day: null,
+          status: "Active",
+        }
+
+        const pay_data = { 
+          id: paymentId, 
+          suscription_id:suscription_id,  
+          transaction_amount: payment.transaction_amount,
+          status: "APRO", 
+          date: payment.date_created
+        }
+
+        const response = await register_data(user_data, suscription_data, pay_data)
+
+
+        if(response.ok === true){
+          console.log('se pudo hacer el registro! :)')
+
+          const dataTKN = {
+            user: user_data,
+            plan: [
+              {
+                plan_type: "annual",
+                start_date: suscription_data.start_date,
+                status: suscription_data.status,
+                mercadopago_plan_id: suscription_data.mercadopago_plan_id,
+                monthly_price: 9900,
+                annual_price: 99000,
+                nombre: "Plan"
+              }
+            ],
+            pagos: [
+              {
+                transaction_amount: pay_data.transaction_amount,
+                status: pay_data.status,
+                date: pay_data.date
+              }
+            ]
+
+          };
+          
+          const token = jwt.sign(dataTKN, "SECRET_KEY")
+
+          io.emit(`pago_suscripcion_${user_id}`,{status:"APRO", tkn:token})
+
+          return res.status(200).send("OK")
+        }else{
+          console.log(response.message)
+          console.log('no se pudo registrar en la base de datos')
+          io.emit(`pago_suscripcion_${user_id}`,{status:"ERR"})
+          return res.status(200).send("OK")
+        }
+      }else{
+        console.log('no se pudo hacer el pago :(')
+        io.emit(`pago_suscripcion_${user_id}`,{status:"REJ"})
+        return res.status(200).send("OK")
+      }
+    }catch(err){
+      console.log('error')
+      console.log(err)
+      io.emit(`pago_suscripcion_${user_id}`,{status:"ERR"})
+      return res.status(400)
+    }
+  }
+
+  return res.status(200).send("OK")
+})
+
+
+
+
+async function register_data (user_data, suscription_data, pay_data) {
+  try{
+    const user = await prisma.users.create({
+      data: user_data
+    })
+    const suscription = await prisma.suscriptions.create({
+      data: suscription_data
+    })
+    const pay = await prisma.pays.create({
+      data:pay_data
+    })
+    
+    const response = {
+      ok:true,
+      user,
+      suscription,
+      pay
+    }
+
+
+    return response
+
+  }catch(err){
+
+    const response = {
+      ok:false,
+      message: err
+    }
+    return response
+  
+  }
+}
 
 router.post('/login',async(req,res)=>{
   const { email,password } = req.body;
