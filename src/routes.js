@@ -10,7 +10,7 @@ import { sendEmailBienvenida } from "./emailSender.js";
 import bcrypt from 'bcrypt';
 
 
-const client = new MercadoPagoConfig({accessToken: 'APP_USR-8569095405415862-061210-47ee8cd18ddac21a3e787d065de456c1-782640045'})
+const client = new MercadoPagoConfig({accessToken: process.env.MERCADO_PAGO_ACCES_TOKEN_UNIQUE})
 
 const prisma = new PrismaClient();
 
@@ -23,10 +23,13 @@ router.get('/',async(req,res)=>{
 
 router.post('/create-suscription',async(req,res)=>{
     const { token, nombre, email, celular, rut, password,user_id } = req.body;
+
+    console.log('body')
+    console.log(req.body)
   
     const fecha_de_nacimiento = "1999-06-14T11:21:59.000-04:00";
     //const plan = process.env.PLAN_ID;
-    const plan = "2c9380849007280c01902bd1a0000998";
+    const plan = process.env.HARDCODED_PLAN_ID;
 
 
     //type: monthly
@@ -35,7 +38,7 @@ router.post('/create-suscription',async(req,res)=>{
       preapproval_plan_id: plan,
       payer_email: email,
       card_token_id: token,
-      status: "authorized", 
+      //status: "authorized", 
     }
 
     if(token) {
@@ -131,7 +134,7 @@ const generar_suscripcion = async(data) => {
         data,
         {
           headers: {
-            Authorization: process.env.MERCADO_PAGO_ACCES_TOKEN,
+            Authorization: process.env.MERCADO_PAGO_ACCES_TOKEN_BEARER,
           },
         }
       )
@@ -159,6 +162,7 @@ router.post('/crear-order', async(req,res)=>{
         currency_id : 'CLP'
  
       }],
+      //https://rifa-club-back-production.up.railway.app
       notification_url: `https://rifa-club-back-production.up.railway.app/webhook/${nombre}/${email}/${celular}/${rut}/${password}/${user_id}/${fecha_de_nacimiento}`
     };
     const preference = new Preference(client);
@@ -187,7 +191,7 @@ router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_
     const paymentId = query.id || query["data.id"];
     try{
       const payment = await new Payment(client).get({id: paymentId});
-        
+      console.log(payment)
       if(payment.status === "approved"){
 
         const suscription_id = uuidv4();
