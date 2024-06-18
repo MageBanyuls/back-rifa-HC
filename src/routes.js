@@ -6,6 +6,7 @@ import { io } from "../index.js";
 import jwt from 'jsonwebtoken';
 import 'dotenv/config.js'
 import { Preference, MercadoPagoConfig, Payment } from "mercadopago";
+import { sendEmailBienvenida } from "./emailSender.js";
 
 
 const client = new MercadoPagoConfig({accessToken: 'APP_USR-1104579101218160-061611-f9da7a6e92ab46ca6efbcb59d3ecd60a-1853466315'})
@@ -344,6 +345,8 @@ router.post('/login',async(req,res)=>{
     return res.status(400).json({message:err})
   }
 })
+
+router.post('/send-w-email', sendEmailBienvenida)
 
 
   
