@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import 'dotenv/config.js'
 import { Preference, MercadoPagoConfig, Payment } from "mercadopago";
 import { sendEmailBienvenida } from "./emailSender.js";
+import bcrypt from 'bcrypt';
 
 
 const client = new MercadoPagoConfig({accessToken: 'APP_USR-1104579101218160-061611-f9da7a6e92ab46ca6efbcb59d3ecd60a-1853466315'})
@@ -43,6 +44,8 @@ router.post('/create-suscription',async(req,res)=>{
           const suscription_id = uuidv4();
           
           const pay_id = uuidv4();
+
+          const passHashed = bcrypt.hashSync(password,bcrypt.genSaltSync(10));
   
           const user_data = { 
             id: user_id , 
@@ -52,7 +55,7 @@ router.post('/create-suscription',async(req,res)=>{
             rut, 
             fecha_de_nacimiento, 
             activo:true, 
-            password
+            password: passHashed
           }
     
           const suscription_data = { 
@@ -183,6 +186,8 @@ router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_
         const suscription_id = uuidv4();
         const plan = process.env.PLAN_ID;
 
+        const passHashed = bcrypt.hashSync(password,bcrypt.genSaltSync(10));
+
         const user_data = { 
           id: user_id , 
           nombre, 
@@ -191,7 +196,7 @@ router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_
           rut, 
           fecha_de_nacimiento, 
           activo:true, 
-          password
+          password: passHashed
         }
   
         const suscription_data = { 
@@ -304,12 +309,13 @@ router.post('/login',async(req,res)=>{
   try{
     const user = await prisma.users.findFirst({
       where: {
-        email: email,
-        password: password
+        email: email
       },
     });
+
+    const userok = bcrypt.compareSync(password, user.password)
     
-    if(user){
+    if(userok){
 
       const data_plan = await prisma.$queryRaw`
         SELECT suscriptions.plan_type, suscriptions.start_date,suscriptions.status ,suscriptions.mercadopago_plan_id, plans.monthly_price, plans.annual_price, plans.nombre 
