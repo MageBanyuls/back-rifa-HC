@@ -4,6 +4,7 @@ import { Server as SocketServer } from "socket.io";
 import AppRoutes from './src/routes.js'
 
 const PORT = process.env.PORT || 4000
+
 import cors from "cors";
 
 // Initializations
