@@ -25,7 +25,6 @@ router.post('/create-suscription',async(req,res)=>{
     const fecha_de_nacimiento = "1999-06-14T11:21:59.000-04:00";
     const plan = process.env.PLAN_ID;
   
-    console.log(token)
     //type: monthly
     const data = {
       preapproval_plan_id: plan,
@@ -76,12 +75,8 @@ router.post('/create-suscription',async(req,res)=>{
             status: "APRO", 
             date:suscripcion.data.date_created 
           }
-  
           const response = await register_data(user_data, suscription_data, pay_data)
-    
           if(response.ok === true){
-
-            console.log('se pudo hacer el registro! :)')
             
             const dataTKN = {
               user: user_data,
@@ -107,22 +102,15 @@ router.post('/create-suscription',async(req,res)=>{
             };
             
             const token = jwt.sign(dataTKN, "SECRET_KEY")
-
             io.emit(`pago_suscripcion_${user_id}`,{status:"APRO", tkn:token})
-  
           }else{
-            console.log('no se pudo hacer el registro en planetscale')
-            console.log('error:')
             io.emit(`pago_suscripcion_${user_id}`,{status:"REJ"})
-            console.log(response.message)
           }
         }else{
           io.emit(`pago_suscripcion_${user_id}`,{status:"REJ"})
-          console.log('no se pudo hacer')
         }
       }else{
         io.emit(`pago_suscripcion_${user_id}`,{status:"REJ"})
-        console.log('no se pudo hacer')
       }
     }
   
@@ -140,10 +128,8 @@ const generar_suscripcion = async(data) => {
           },
         }
       )
-      console.log(response)
       return response
     }catch(err){
-      console.log(err)
       return null
     }
 }
@@ -173,10 +159,8 @@ router.post('/crear-order', async(req,res)=>{
 })
 
 router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_nacimiento',async(req,res)=>{
-  console.log('webhook')
   const { query } = req;
   const topic = query.topic || query.type;
-  console.log(topic)
 
   const nombre = req.params.nombre
   const email = req.params.email;
@@ -192,13 +176,9 @@ router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_
     const paymentId = query.id || query["data.id"];
     try{
       const payment = await new Payment(client).get({id: paymentId});
-  
-      console.log('pago')
-      console.log(payment)
-      
+        
       if(payment.status === "approved"){
 
-        console.log('se pudo hacer el pago! :)')
         const suscription_id = uuidv4();
         const plan = process.env.PLAN_ID;
 
@@ -237,7 +217,6 @@ router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_
 
 
         if(response.ok === true){
-          console.log('se pudo hacer el registro! :)')
 
           const dataTKN = {
             user: user_data,
@@ -268,19 +247,14 @@ router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_
 
           return res.status(200).send("OK")
         }else{
-          console.log(response.message)
-          console.log('no se pudo registrar en la base de datos')
           io.emit(`pago_suscripcion_${user_id}`,{status:"ERR"})
           return res.status(200).send("OK")
         }
       }else{
-        console.log('no se pudo hacer el pago :(')
         io.emit(`pago_suscripcion_${user_id}`,{status:"REJ"})
         return res.status(200).send("OK")
       }
     }catch(err){
-      console.log('error')
-      console.log(err)
       io.emit(`pago_suscripcion_${user_id}`,{status:"ERR"})
       return res.status(400)
     }
@@ -288,8 +262,6 @@ router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_
 
   return res.status(200).send("OK")
 })
-
-
 
 
 async function register_data (user_data, suscription_data, pay_data) {
@@ -374,20 +346,5 @@ router.post('/login',async(req,res)=>{
 })
 
 
-/*
-SELECT suscriptions.plan_type, suscriptions.start_date, plans.monthly_price, plans.annual_price, plans.nombre 
-FROM plans 
-JOIN suscriptions ON plans.id = suscriptions.plan_id 
-JOIN users ON suscriptions.user_id = users.id 
-WHERE users.email = "";
-
-
-
-SELECT pays.transaction_amount, pays.status, pays.date 
-FROM pays 
-JOIN suscriptions ON pays.suscription_id = suscriptions.id 
-JOIN users ON suscriptions.user_id = users.id 
-WHERE users.email = "";
-*/
   
 export default router
