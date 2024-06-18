@@ -36,7 +36,7 @@ router.post('/create-suscription',async(req,res)=>{
 
     const data = {
       preapproval_plan_id: plan,
-      payer_email: email,
+      payer_email: req.body.payer.email,
       card_token_id: token,
       //status: "authorized", 
     }
