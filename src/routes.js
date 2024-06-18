@@ -10,7 +10,7 @@ import { sendEmailBienvenida } from "./emailSender.js";
 import bcrypt from 'bcrypt';
 
 
-const client = new MercadoPagoConfig({accessToken: 'APP_USR-1104579101218160-061611-f9da7a6e92ab46ca6efbcb59d3ecd60a-1853466315'})
+const client = new MercadoPagoConfig({accessToken: 'APP_USR-8569095405415862-061210-47ee8cd18ddac21a3e787d065de456c1-782640045'})
 
 const prisma = new PrismaClient();
 
@@ -25,12 +25,15 @@ router.post('/create-suscription',async(req,res)=>{
     const { token, nombre, email, celular, rut, password,user_id } = req.body;
   
     const fecha_de_nacimiento = "1999-06-14T11:21:59.000-04:00";
-    const plan = process.env.PLAN_ID;
-  
+    //const plan = process.env.PLAN_ID;
+    const plan = "2c9380849007284d01902b85570a0948";
+
+
     //type: monthly
+
     const data = {
       preapproval_plan_id: plan,
-      payer_email: "test_user_422112672@testuser.com",
+      payer_email: email,
       card_token_id: token,
       status: "authorized", 
     }
@@ -90,8 +93,8 @@ router.post('/create-suscription',async(req,res)=>{
                   start_date: suscription_data.start_date,
                   status: suscription_data.status,
                   mercadopago_plan_id: suscription_data.mercadopago_plan_id,
-                  monthly_price: 9900,
-                  annual_price: 99000,
+                  monthly_price: 950,
+                  annual_price: 950,
                   nombre: "Plan"
                 }
               ],
@@ -148,7 +151,7 @@ router.post('/crear-order', async(req,res)=>{
       items : [{
         title : 'Plan Anual',
         quantity : 1,
-        unit_price : 99000,
+        unit_price : 950,
         currency_id : 'CLP'
  
       }],
@@ -232,8 +235,8 @@ router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_
                 start_date: suscription_data.start_date,
                 status: suscription_data.status,
                 mercadopago_plan_id: suscription_data.mercadopago_plan_id,
-                monthly_price: 9900,
-                annual_price: 99000,
+                monthly_price: 950,
+                annual_price: 950,
                 nombre: "Plan"
               }
             ],

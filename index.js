@@ -19,7 +19,7 @@ app.use(express.json())
 
 // Middlewares
 app.use(cors({
-    origin: 'https://rifa-club.netlify.app'
+    origin: ['http://localhost:5173', 'https://rifa-club.netlify.app']
 }));
 
 app.use(AppRoutes)
