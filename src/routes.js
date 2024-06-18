@@ -10,7 +10,7 @@ import { sendEmailBienvenida } from "./emailSender.js";
 import bcrypt from 'bcrypt';
 
 
-const client = new MercadoPagoConfig({accessToken: process.env.MERCADO_PAGO_ACCES_TOKEN_UNIQUE})
+const client = new MercadoPagoConfig({accessToken: 'APP_USR-8569095405415862-061210-47ee8cd18ddac21a3e787d065de456c1-782640045'})
 
 const prisma = new PrismaClient();
 
@@ -28,15 +28,14 @@ router.post('/create-suscription',async(req,res)=>{
     console.log(req.body)
   
     const fecha_de_nacimiento = "1999-06-14T11:21:59.000-04:00";
-    //const plan = process.env.PLAN_ID;
-    const plan = process.env.HARDCODED_PLAN_ID;
+    const plan = "2c9380849007280c01902bd1a0000998";
 
 
     //type: monthly
 
     const data = {
       preapproval_plan_id: plan,
-      payer_email: email,
+      payer_email: req.body.payer.email,
       card_token_id: token,
       //status: "authorized", 
     }
@@ -134,7 +133,7 @@ const generar_suscripcion = async(data) => {
         data,
         {
           headers: {
-            Authorization: process.env.MERCADO_PAGO_ACCES_TOKEN_BEARER,
+            Authorization: 'Bearer APP_USR-8569095405415862-061210-47ee8cd18ddac21a3e787d065de456c1-782640045',
           },
         }
       )
@@ -163,7 +162,7 @@ router.post('/crear-order', async(req,res)=>{
  
       }],
       //https://rifa-club-back-production.up.railway.app
-      notification_url: `https://rifa-club-back-production.up.railway.app/webhook/${nombre}/${email}/${celular}/${rut}/${password}/${user_id}/${fecha_de_nacimiento}`
+      notification_url: `https://rifa-club-production.up.railway.app/webhook/${nombre}/${email}/${celular}/${rut}/${password}/${user_id}/${fecha_de_nacimiento}`
     };
     const preference = new Preference(client);
     const result = await preference.create({body});
