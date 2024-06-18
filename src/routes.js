@@ -135,8 +135,12 @@ const generar_suscripcion = async(data) => {
           },
         }
       )
+      console.log('respuesta de la suscripcion')
+      console.log(response)
       return response
     }catch(err){
+      console.log('error en la suscripcion')
+      console.log(err)
       return null
     }
 }
