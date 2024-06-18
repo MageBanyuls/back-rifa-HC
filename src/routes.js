@@ -26,7 +26,7 @@ router.post('/create-suscription',async(req,res)=>{
   
     const fecha_de_nacimiento = "1999-06-14T11:21:59.000-04:00";
     //const plan = process.env.PLAN_ID;
-    const plan = "2c9380849007284d01902b85570a0948";
+    const plan = "2c9380849007280c01902bd1a0000998";
 
 
     //type: monthly
