@@ -194,7 +194,7 @@ router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_
       if(payment.status === "approved"){
 
         const suscription_id = uuidv4();
-        const plan = process.env.PLAN_ID;
+        const plan = "2c9380849007280c01902bd1a0000998";
 
         const passHashed = bcrypt.hashSync(password,bcrypt.genSaltSync(10));
 
