@@ -21,6 +21,10 @@ router.get('/',async(req,res)=>{
   res.send('hola')
 })
 
+router.get('/test',async(req,res)=>{
+  res.status(200).send('hola')
+})
+
 router.post('/create-suscription',async(req,res)=>{
     const { token, nombre, email, celular, rut, password,user_id } = req.body;
 
@@ -364,6 +368,20 @@ router.post('/login',async(req,res)=>{
 
 router.post('/send-w-email', sendEmailBienvenida)
 
+
+router.post('/update-user',async(req,res)=>{
+  //return res.status(200).send('actualizar usuario')
+  const { id, data } = req.body;
+  try{
+    const updateUser = await prisma.users.update({
+      where: { id },
+      data: data
+    })
+    return res.status(200).json({updateUser})
+  }catch(err){
+    return res.status(400).json({ok:false,message:err})
+  }
+})
 
   
 export default router
