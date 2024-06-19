@@ -31,7 +31,11 @@ router.post('/create-suscription',async(req,res)=>{
 
     console.log('body')
     console.log(req.body)
-    const plan = "2c9380849007280c01902bd1a0000998";
+    //prueba real de la real
+    const plan = "2c9380849007284d0190323d5e150bba"
+    //prueba real
+    //const plan = "2c9380849007280c01902bd1a0000998";
+    //prueba tester
     //const plan = "2c9380849007280c01900cdc44590196";
 
     //type: monthly
@@ -99,8 +103,8 @@ router.post('/create-suscription',async(req,res)=>{
                   start_date: suscription_data.start_date,
                   status: suscription_data.status,
                   mercadopago_plan_id: suscription_data.mercadopago_plan_id,
-                  monthly_price: 950,
-                  annual_price: 950,
+                  monthly_price: 9900,
+                  annual_price: 99000,
                   nombre: "Plan"
                 }
               ],
@@ -163,7 +167,7 @@ router.post('/crear-order', async(req,res)=>{
       items : [{
         title : 'Plan Anual',
         quantity : 1,
-        unit_price : 950,
+        unit_price : 99000,
         currency_id : 'CLP'
  
       }],
@@ -250,8 +254,8 @@ router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_
                 start_date: suscription_data.start_date,
                 status: suscription_data.status,
                 mercadopago_plan_id: suscription_data.mercadopago_plan_id,
-                monthly_price: 950,
-                annual_price: 950,
+                monthly_price: 9900,
+                annual_price: 99000,
                 nombre: "Plan"
               }
             ],
