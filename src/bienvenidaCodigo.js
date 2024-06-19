@@ -160,7 +160,7 @@ export const getHTMLBienvenidaYCodigo = (codigo) =>{ return `<!DOCTYPE HTML PUBL
           <td style="overflow-wrap:break-word;word-break:break-word;padding:20px 10px;font-family:arial,helvetica,sans-serif;" align="left">
             
       <!--[if mso]><table width="100%"><tr><td><![endif]-->
-        <h1 style="margin: 0px; line-height: 140%; text-align: center; word-wrap: break-word; font-family: 'Montserrat',sans-serif; font-size: 28px; font-weight: 400;"><span><span><strong>¡Bienvenido!</strong></span></span></h1>
+        <h1 style="margin: 0px; line-height: 140%; text-align: center; word-wrap: break-word; font-family: 'Montserrat',sans-serif; font-size: 28px; font-weight: 400;"><span><span><strong>¡Bienvenido a RifaClub!</strong></span></span></h1>
       <!--[if mso]></td></tr></table><![endif]-->
     
           </td>
@@ -174,8 +174,8 @@ export const getHTMLBienvenidaYCodigo = (codigo) =>{ return `<!DOCTYPE HTML PUBL
           <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:arial,helvetica,sans-serif;" align="left">
             
       <div style="font-family: 'Montserrat',sans-serif; font-size: 14px; font-weight: 400; line-height: 140%; text-align: center; word-wrap: break-word;">
-        <p style="line-height: 140%;">¡Gracias por registrarte en RifaClub! Estás a solo un paso de activar tu cuenta y comenzar a disfrutar de nuestros servicios. Para activar tu cuenta, simplemente ingresa el código de activación en la pagina de activación.</p>
-    <p style="line-height: 140%;">Tu código de activación es:</p>
+        <p style="line-height: 140%;">¡Gracias por unirte a nuestra comunidad! Ahora formas parte de un grupo exclusivo de entusiastas que disfrutan de increíbles rifas y sorteos. Prepárate para recibir las mejores oportunidades y premios emocionantes.</p>
+    
       </div>
     
           </td>
@@ -188,10 +188,7 @@ export const getHTMLBienvenidaYCodigo = (codigo) =>{ return `<!DOCTYPE HTML PUBL
         <tr>
           <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:arial,helvetica,sans-serif;" align="left">
             
-      <div style="font-family: 'Montserrat',sans-serif; font-size: 30px; font-weight: 700; line-height: 140%; text-align: center; word-wrap: break-word;">
-        <p style="line-height: 140%;"><strong>${codigo}</strong></p>
-      </div>
-    
+      
           </td>
         </tr>
       </tbody>
@@ -203,7 +200,7 @@ export const getHTMLBienvenidaYCodigo = (codigo) =>{ return `<!DOCTYPE HTML PUBL
           <td style="overflow-wrap:break-word;word-break:break-word;padding:23px;font-family:arial,helvetica,sans-serif;" align="left">
             
       <div style="font-size: 14px; line-height: 140%; text-align: center; word-wrap: break-word;">
-        <p style="line-height: 140%;"><span style="font-family: Montserrat, sans-serif; line-height: 19.6px;">Si tienes alguna pregunta o necesitas ayuda durante el proceso, no dudes en contactarnos. Estamos aquí para asegurarnos de que tu experiencia con RifaClub sea excepcional desde el principio.</span></p>
+        <p style="line-height: 140%;"><span style="font-family: Montserrat, sans-serif; line-height: 19.6px;">Nos alegra tenerte con nosotros. ¡Buena suerte y disfruta de la experiencia RifaClub!</span></p>
       </div>
     
           </td>

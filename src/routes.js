@@ -11,6 +11,7 @@ import bcrypt from 'bcrypt';
 
 
 const client = new MercadoPagoConfig({accessToken: 'APP_USR-8569095405415862-061210-47ee8cd18ddac21a3e787d065de456c1-782640045'})
+//const client = new MercadoPagoConfig({accessToken: 'APP_USR-6042457912670930-061210-8ca40ae15924091738f5f364d8383ee6-1853466315'})
 
 const prisma = new PrismaClient();
 
@@ -26,20 +27,19 @@ router.get('/test',async(req,res)=>{
 })
 
 router.post('/create-suscription',async(req,res)=>{
-    const { token, nombre, email, celular, rut, password,user_id } = req.body;
+    const { token, nombre, email, celular, rut, password,user_id,fecha_de_nacimiento } = req.body;
 
     console.log('body')
     console.log(req.body)
-  
-    const fecha_de_nacimiento = "1999-06-14T11:21:59.000-04:00";
     const plan = "2c9380849007280c01902bd1a0000998";
-
+    //const plan = "2c9380849007280c01900cdc44590196";
 
     //type: monthly
 
     const data = {
       preapproval_plan_id: plan,
       payer_email: req.body.payer.email,
+      //payer_email: "test_user_422112672@testuser.com",
       card_token_id: token,
       //status: "authorized", 
     }
@@ -92,7 +92,7 @@ router.post('/create-suscription',async(req,res)=>{
           if(response.ok === true){
             
             const dataTKN = {
-              user: user_data,
+              user: {...user_data,pass: password},
               plan: [
                 {
                   plan_type: "monthly",
@@ -115,6 +115,7 @@ router.post('/create-suscription',async(req,res)=>{
             };
             
             const token = jwt.sign(dataTKN, "SECRET_KEY")
+            await sendEmailBienvenida(email);
             io.emit(`pago_suscripcion_${user_id}`,{status:"APRO", tkn:token})
           }else{
             io.emit(`pago_suscripcion_${user_id}`,{status:"REJ"})
@@ -138,6 +139,7 @@ const generar_suscripcion = async(data) => {
         {
           headers: {
             Authorization: 'Bearer APP_USR-8569095405415862-061210-47ee8cd18ddac21a3e787d065de456c1-782640045',
+            //Authorization: 'Bearer APP_USR-6042457912670930-061210-8ca40ae15924091738f5f364d8383ee6-1853466315',
           },
         }
       )
@@ -153,8 +155,8 @@ const generar_suscripcion = async(data) => {
 
 
 router.post('/crear-order', async(req,res)=>{
-  const { nombre, email, celular, rut, password,user_id } = req.body;
-  const fecha_de_nacimiento = "1999-06-14T11:21:59.000-04:00";
+  const { nombre, email, celular, rut, password,user_id,fecha_de_nacimiento } = req.body;
+  //const fecha_de_nacimiento = "1999-06-14T11:21:59.000-04:00";
   
   try{
     const body = {
@@ -165,8 +167,9 @@ router.post('/crear-order', async(req,res)=>{
         currency_id : 'CLP'
  
       }],
-      //https://rifa-club-back-production.up.railway.app
+      //notification_url: `https://7c8c-190-15-219-128.ngrok-free.app/webhook/${nombre}/${email}/${celular}/${rut}/${password}/${user_id}/${fecha_de_nacimiento}`
       notification_url: `https://rifa-club-production.up.railway.app/webhook/${nombre}/${email}/${celular}/${rut}/${password}/${user_id}/${fecha_de_nacimiento}`
+
     };
     const preference = new Preference(client);
     const result = await preference.create({body});
@@ -199,6 +202,7 @@ router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_
 
         const suscription_id = uuidv4();
         const plan = "2c9380849007280c01902bd1a0000998";
+        //const plan = "2c9380849007280c01900cdc44590196";
 
         const passHashed = bcrypt.hashSync(password,bcrypt.genSaltSync(10));
 
@@ -239,7 +243,7 @@ router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_
         if(response.ok === true){
 
           const dataTKN = {
-            user: user_data,
+            user: {...user_data,pass:password},
             plan: [
               {
                 plan_type: "annual",
@@ -262,6 +266,7 @@ router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_
           };
           
           const token = jwt.sign(dataTKN, "SECRET_KEY")
+          await sendEmailBienvenida(email);
 
           io.emit(`pago_suscripcion_${user_id}`,{status:"APRO", tkn:token})
 
@@ -326,8 +331,11 @@ router.post('/login',async(req,res)=>{
         email: email
       },
     });
+    console.log(user)
 
     const userok = bcrypt.compareSync(password, user.password)
+
+    console.log(userok)
     
     if(userok){
 
@@ -348,11 +356,13 @@ router.post('/login',async(req,res)=>{
       `;
 
       const response = {
-        user,
+        user: {...user, pass:password},
         plan: data_plan,
         pagos
       }
 
+      console.log('respuesta')
+      console.log(response)
       const token = jwt.sign(response, "SECRET_KEY")
 
       return res.status(201).json(
@@ -366,22 +376,54 @@ router.post('/login',async(req,res)=>{
   }
 })
 
-router.post('/send-w-email', sendEmailBienvenida)
 
 
-router.post('/update-user',async(req,res)=>{
-  //return res.status(200).send('actualizar usuario')
-  const { id, data } = req.body;
+router.put('/update-user',async(req,res)=>{
+  const { id,data,email,pass } = req.body;  
   try{
+
     const updateUser = await prisma.users.update({
       where: { id },
       data: data
     })
-    return res.status(200).json({updateUser})
+
+    console.log('update user')
+
+    const data_plan = await prisma.$queryRaw`
+        SELECT suscriptions.plan_type, suscriptions.start_date,suscriptions.status ,suscriptions.mercadopago_plan_id, plans.monthly_price, plans.annual_price, plans.nombre 
+        FROM plans 
+        JOIN suscriptions ON plans.id = suscriptions.plan_id 
+        JOIN users ON suscriptions.user_id = users.id 
+        WHERE users.email = ${email}
+      `;
+      
+    const pagos = await prisma.$queryRaw`
+        SELECT pays.transaction_amount, pays.status, pays.date 
+        FROM pays 
+        JOIN suscriptions ON pays.suscription_id = suscriptions.id 
+        JOIN users ON suscriptions.user_id = users.id 
+        WHERE users.email = ${email}
+      `;
+
+    const response = {
+        user: { ...updateUser, pass:pass },
+        plan: data_plan,
+        pagos
+    }
+
+    console.log('respuesta')
+    console.log(response)
+    const token = jwt.sign(response, "SECRET_KEY")
+
+    return res.status(201).json(
+        {tkn:token}
+    )
+
   }catch(err){
     return res.status(400).json({ok:false,message:err})
-  }
+  }  
 })
+
 
   
 export default router

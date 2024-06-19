@@ -34,15 +34,20 @@ const createPasswordMessage = {
 //         throw error
 //     }
 // }
-export const sendEmailBienvenida = async (email, codigo) => {
+export const sendEmailBienvenida = async (email) => {
     try {
+        //const { email } = req.body;
         // Genera el contenido HTML con el enlace incluido
-        const htmlContent = getHTMLBienvenidaYCodigo(codigo);
+        const htmlContent = getHTMLBienvenidaYCodigo();
         createPasswordMessage.to = email;
         createPasswordMessage.html = htmlContent;
         const response = await transporterGmail.sendMail(createPasswordMessage);
-        return `Te llegara un mail a ${response.accepted}`
+        return true
+        //return res.status(200).json({ok:true})
     } catch (error) {
-        throw error
+        return null
+        //return res.status(400).json({ok:false,message: error})
     }
 }
+
+
