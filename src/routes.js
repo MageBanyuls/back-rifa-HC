@@ -9,8 +9,9 @@ import { Preference, MercadoPagoConfig, Payment } from "mercadopago";
 import { sendEmailBienvenida } from "./emailSender.js";
 import bcrypt from 'bcrypt';
 
-
+//real:
 const client = new MercadoPagoConfig({accessToken: 'APP_USR-8569095405415862-061210-47ee8cd18ddac21a3e787d065de456c1-782640045'})
+//test:
 //const client = new MercadoPagoConfig({accessToken: 'APP_USR-6042457912670930-061210-8ca40ae15924091738f5f364d8383ee6-1853466315'})
 
 const prisma = new PrismaClient();
@@ -143,6 +144,7 @@ const generar_suscripcion = async(data) => {
         {
           headers: {
             Authorization: 'Bearer APP_USR-8569095405415862-061210-47ee8cd18ddac21a3e787d065de456c1-782640045',
+            //test:
             //Authorization: 'Bearer APP_USR-6042457912670930-061210-8ca40ae15924091738f5f364d8383ee6-1853466315',
           },
         }
@@ -159,11 +161,13 @@ const generar_suscripcion = async(data) => {
 
 
 router.post('/crear-order', async(req,res)=>{
-  const { nombre, email, celular, rut, password,user_id,fecha_de_nacimiento } = req.body;
+  const { nombre, email, celular, rut, password,user_id,fecha_de_nacimiento, mobile } = req.body;
   //const fecha_de_nacimiento = "1999-06-14T11:21:59.000-04:00";
   
   try{
-    const body = {
+    
+
+    let body = {
       items : [{
         title : 'Plan Anual',
         quantity : 1,
@@ -171,10 +175,25 @@ router.post('/crear-order', async(req,res)=>{
         currency_id : 'CLP'
  
       }],
-      //notification_url: `https://7c8c-190-15-219-128.ngrok-free.app/webhook/${nombre}/${email}/${celular}/${rut}/${password}/${user_id}/${fecha_de_nacimiento}`
-      notification_url: `https://rifa-club-production.up.railway.app/webhook/${nombre}/${email}/${celular}/${rut}/${password}/${user_id}/${fecha_de_nacimiento}`
+      
+      //notification_url: `https://7204-181-91-208-141.ngrok-free.app/webhook/${nombre.trim().replace(/\s+/g, "-")}/${email}/${celular}/${rut}/${password}/${user_id}/${fecha_de_nacimiento}`
+      notification_url: `https://rifa-club-production.up.railway.app/webhook/${nombre.trim().replace(/\s+/g, "-")}/${email}/${celular}/${rut}/${password}/${user_id}/${fecha_de_nacimiento}`
 
     };
+
+    let redirecions = {
+      back_urls: {
+        success: "https://rifa-club.netlify.app/",
+        failure: "https://rifa-club.netlify.app/",
+        pending: "https://rifa-club.netlify.app/"
+      },
+      auto_return: "approved",
+    }
+
+    
+    mobile === true ? body = {...body, ...redirecions} : body = body
+    console.log(body)
+
     const preference = new Preference(client);
     const result = await preference.create({body});
     return res.status(200).json({init_point: result.init_point})
@@ -183,11 +202,13 @@ router.post('/crear-order', async(req,res)=>{
   }
 })
 
+
+
 router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_nacimiento',async(req,res)=>{
   const { query } = req;
   const topic = query.topic || query.type;
 
-  const nombre = req.params.nombre
+  const nombre = req.params.nombre.replace(/-/g, " ")
   const email = req.params.email;
   const celular = req.params.celular; 
   const rut = req.params.rut;
@@ -205,7 +226,9 @@ router.post('/webhook/:nombre/:email/:celular/:rut/:password/:user_id/:fecha_de_
       if(payment.status === "approved"){
 
         const suscription_id = uuidv4();
-        const plan = "2c9380849007280c01902bd1a0000998";
+        //plan real:
+        const plan = "2c9380849007284d0190323d5e150bba";
+        //plan tester:
         //const plan = "2c9380849007280c01900cdc44590196";
 
         const passHashed = bcrypt.hashSync(password,bcrypt.genSaltSync(10));
@@ -426,6 +449,30 @@ router.put('/update-user',async(req,res)=>{
   }catch(err){
     return res.status(400).json({ok:false,message:err})
   }  
+})
+
+router.get('/user-exist/:email',async(req,res)=>{
+  
+  const email = req.params.email;
+  let response;
+
+  try{
+
+    const user =await prisma.users.findFirst({
+      where: {
+        email: email
+      },
+    });
+    console.log(user)
+    if(user){
+      response = {ok:true}
+    }else{
+      response = {ok:false}
+    }
+    return res.status(200).json(response)
+  }catch(err){
+    return res.status(400).json({ok:false})
+  }
 })
 
 
