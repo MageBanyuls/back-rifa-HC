@@ -6,7 +6,7 @@ import { io } from "../index.js";
 import jwt from 'jsonwebtoken';
 import 'dotenv/config.js'
 import { Preference, MercadoPagoConfig, Payment } from "mercadopago";
-import { sendEmailBienvenida } from "./emailSender.js";
+import { sendEmailBienvenida, sendEmailCode } from "./emailSender.js";
 import bcrypt from 'bcrypt';
 
 //real:
@@ -414,7 +414,6 @@ router.put('/update-user',async(req,res)=>{
       data: data
     })
 
-    console.log('update user')
 
     const data_plan = await prisma.$queryRaw`
         SELECT suscriptions.plan_type, suscriptions.start_date,suscriptions.status ,suscriptions.mercadopago_plan_id, plans.monthly_price, plans.annual_price, plans.nombre 
@@ -475,6 +474,107 @@ router.get('/user-exist/:email',async(req,res)=>{
   }
 })
 
+
+
+
+const codigos = [
+  'ABCD', 'EFGH', 'IJKL', 'MNOP', 'QRST',
+  'UVWX', 'YZ01', '2345', '6789', 'BCDE',
+  'FGHI', 'JKLM', 'NOPQ', 'RSTU', 'VWXY'
+];
+
+
+router.post('/send-code',async(req,res)=>{
+
+  const { email } = req.body
+  const indiceAleatorio = Math.floor(Math.random() * codigos.length);
+  const codigoSeleccionado = codigos[indiceAleatorio];
+
+  try{
+    const sendEmail = await sendEmailCode(email,codigoSeleccionado)
+    if(sendEmail){
+      return res.status(200).json({ok:true})
+    }else{
+      return res.status(400).json({ok:false,message:err})
+    }
+  }catch(err){
+    return res.status(400).json({ok:false,message:err})
+  }
+})
+
+
+router.post('/confirm-code',async(req,res)=>{
+
+  const { cod } = req.body;
+  
+  let response = {ok:false};
+
+  for (let i = 0; i < codigos.length; i++){
+    if (cod === codigos[i]) {
+      response = {ok:true}
+    }
+  }
+
+  console.log(response)
+  return res.status(201).json(response)  
+})
+
+router.post('/set-pass',async(req,res)=>{
+
+  const {email,new_password} = req.body;
+
+  try{
+
+    const user = await prisma.users.findFirst({
+      where:{
+        email: email
+      }
+    })
+
+    const id = user.id;
+    
+    const passHashed = bcrypt.hashSync(new_password,bcrypt.genSaltSync(10));
+    
+    const data = { password: passHashed}
+
+    const updateUser = await prisma.users.update({
+      where: { id : id },
+      data: data
+    })
+
+    const data_plan = await prisma.$queryRaw`
+        SELECT suscriptions.plan_type, suscriptions.start_date,suscriptions.status ,suscriptions.mercadopago_plan_id, plans.monthly_price, plans.annual_price, plans.nombre 
+        FROM plans 
+        JOIN suscriptions ON plans.id = suscriptions.plan_id 
+        JOIN users ON suscriptions.user_id = users.id 
+        WHERE users.email = ${email}
+      `;
+      
+    const pagos = await prisma.$queryRaw`
+        SELECT pays.transaction_amount, pays.status, pays.date 
+        FROM pays 
+        JOIN suscriptions ON pays.suscription_id = suscriptions.id 
+        JOIN users ON suscriptions.user_id = users.id 
+        WHERE users.email = ${email}
+      `;
+
+    const response = {
+        user: { ...updateUser, pass: new_password },
+        plan: data_plan,
+        pagos
+    }
+
+    console.log('respuesta')
+    console.log(response)
+    const token = jwt.sign(response, "SECRET_KEY")
+
+    return res.status(201).json(
+      {tkn:token}
+    )
+  }catch(err){
+    return res.status(400).json({ok:false,message:err})
+  }
+})
 
   
 export default router
