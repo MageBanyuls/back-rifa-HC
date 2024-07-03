@@ -19,6 +19,17 @@ CREATE TABLE plans(
     PRIMARY KEY (id)
 );
 
+CREATE TABLE clicks(
+    id INT NOT NULL,
+    email INT,
+    formulario INT,
+    plan_mensual INT,
+    plan_anual INT,
+    pagar_anual INT,
+    pagar_mensual INT,
+    PRIMARY KEY (id)
+);
+
 CREATE TABLE suscriptions (
     id VARCHAR(100) NOT NULL,
     user_id VARCHAR(100) NOT NULL,
